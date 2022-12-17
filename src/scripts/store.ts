@@ -24,44 +24,51 @@
   const methods = {
     copyToClipboard(str: string) {
       console.log(str)
-      // const el = document.createElement('textarea') // 创建一个 <textarea> 元素
-      // el.value = str // 设置它的值为你想复制的字符串
-      // el.setAttribute('readonly', '') // 设置为只读以防止干扰
-      // el.style.position = 'absolute'
-      // el.style.left = '-9999px' // 移出屏幕外以使其不可见
-      // document.body.appendChild(el) // 插入 <textarea> 元素到 HTML 文档中
-      // const selected =
-      //   document.getSelection()?.rangeCount! > 0 // 检查是否之前曾选中过内容
-      //     ? document.getSelection()!.getRangeAt(0) // 如果找到，则保存选中
-      //     : false // 标记为  false 以表示不存在之前选中的内容
-      // el.select() // 选中 <textarea> 的内容
-      // document.execCommand('copy') // 复制 - 仅当作为用户操作的响应结果时才可以工作(比如，点击事件)
-      // document.body.removeChild(el) // 移除 <textarea> 元素
-      // if (selected) {
-      //   // 如果在复制前已存在选中的内容
-      //   document.getSelection()!.removeAllRanges() // 取消 HTML 文档中所有的选中部分
-      //   document.getSelection()!.addRange(selected) // 恢复原来的选中
-      // }
-
       // function copyText(text: string) {
-      const div = document.querySelector<HTMLElement>('.wj-copy-text') || document.createElement('div')
+      const div = document.createElement('div')
       div.classList.add('wj-copy-text')
+      div.style.cssText = `
+        position: absolute;
+        opacity: 0;
+        left: -200vw;
+      `
       div.innerText = str
       document.body.appendChild(div)
       //复制文本 需要在文档中添加一个复制用的input
-      var copyDOM = div //要复制文字的节点
-      var range = document.createRange() //创建一个range
+      const range = document.createRange() //创建一个range
       window.getSelection()?.removeAllRanges() //清楚页面中已有的selection
-      range.selectNode(copyDOM) // 选中需要复制的节点
+      range.selectNode(div) // 选中需要复制的节点
       window.getSelection()?.addRange(range) // 执行选中元素
-      var successful = document.execCommand('copy') // 执行 copy 操作
+      const successful = document.execCommand('copy') // 执行 copy 操作
       if (successful) {
         // alert('复制成功！')
       } else {
-        alert('复制失败，请手动复制！')
+        const el = document.createElement('textarea') // 创建一个 <textarea> 元素
+        el.value = str // 设置它的值为你想复制的字符串
+        el.setAttribute('readonly', '') // 设置为只读以防止干扰
+        el.style.position = 'absolute'
+        el.style.left = '-9999px' // 移出屏幕外以使其不可见
+        document.body.appendChild(el) // 插入 <textarea> 元素到 HTML 文档中
+        const selected =
+          document.getSelection()?.rangeCount! > 0 // 检查是否之前曾选中过内容
+            ? document.getSelection()!.getRangeAt(0) // 如果找到，则保存选中
+            : false // 标记为  false 以表示不存在之前选中的内容
+        el.select() // 选中 <textarea> 的内容
+        document.execCommand('copy') // 复制 - 仅当作为用户操作的响应结果时才可以工作(比如，点击事件)
+        const successful = document.execCommand('copy') // 执行 copy 操作
+        if (!successful) {
+          alert(`复制失败，请手动打开控制台复制`)
+        }
+        // alert('复制成功！')
+        document.body.removeChild(el) // 移除 <textarea> 元素
+        if (selected) {
+          // 如果在复制前已存在选中的内容
+          document.getSelection()!.removeAllRanges() // 取消 HTML 文档中所有的选中部分
+          document.getSelection()!.addRange(selected) // 恢复原来的选中
+        }
       } // 移除选中的元素
       window.getSelection()?.removeAllRanges()
-      // }
+      document.querySelector<HTMLElement>('.wj-copy-text')?.remove()
     },
     getNumber(str: string, defaultStr: string = '0') {
       return str ? parseInt(str.replace(/[^\d]/g, '') || defaultStr) : 0
@@ -105,7 +112,9 @@
 
   let potentialText = '复制商家潜力链接'
 
-  function renderBar(links: string[], localFormData: IFormInitialValues) {
+  async function renderBar(links: string[], localFormData: IFormInitialValues) {
+    const storeHistory: string[] = (await chrome.storage.local.get([STORE_HISTORY]))[STORE_HISTORY] || []
+    const userName = document.querySelector<HTMLElement>('.user-id')?.innerText
     document.querySelector('.kaki-bar')?.remove()
     const htmlStr = `
         <div class="kaki-bar-item">
@@ -117,6 +126,9 @@
         </div>
         <div class="kaki-bar-item">
           <div class="kaki-button copy-potential-links">${potentialText}</div>
+        </div>
+        <div class="kaki-bar-item">
+          <div class="lutian-tips">${storeHistory.includes(userName!) ? '商家已被复制' : ''}</div>
         </div>
     `
     const container = document.createElement('div')
@@ -133,7 +145,6 @@
       }
       copyPotentialLinkButton.innerText = potentialText = '正在拉取数据，请稍等'
 
-      const userName = document.querySelector<HTMLElement>('.user-id')?.innerText
       if (!userName) {
         const errInfo = '没有找到userName'
         copyPotentialLinkButton.innerText = potentialText = errInfo
@@ -214,19 +225,14 @@
       }
       methods.copyToClipboard(potentialLinks.join('\n') || '暂无数据')
 
-      const storeHistory: string[] = (await chrome.storage.local.get([STORE_HISTORY]))[STORE_HISTORY] || []
-      if (storeHistory.includes(userName)) {
-        copyPotentialLinkButton.innerText = potentialText = potentialLinks.length
-          ? '复制商家潜力链接（复制成功！ps：之前复制过的商家！！！）'
-          : '暂无数据'
-      } else {
+      if (!storeHistory.includes(userName)) {
         chrome.storage.local.set({
           [STORE_HISTORY]: [...storeHistory, userName],
         })
-        copyPotentialLinkButton.innerText = potentialText = potentialLinks.length
-          ? '复制商家潜力链接（复制成功！）'
-          : '暂无数据'
       }
+      copyPotentialLinkButton.innerText = potentialText = potentialLinks.length
+        ? '复制商家潜力链接（复制成功！）'
+        : '暂无数据'
     }
   }
   // 初始化商品筛选
