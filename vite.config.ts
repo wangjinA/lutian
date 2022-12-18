@@ -11,7 +11,6 @@ export default defineConfig({
         { src: "src/styles", dest: "dist" },
         { src: "src/assets", dest: "dist" },
       ],
-
       hook: "writeBundle",
     }),
   ],

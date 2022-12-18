@@ -1,15 +1,13 @@
 ;(() => {
   const LOCAL_KEY_FORMDATA = 'configFormData' // 配置
   const TIMER_ID = 'lutian_store_goods_links_copy_timer' // 定时器id
-  const GOODS_IDS_CACHE = 'lutian_store_goods_ids_cache' // 商品id列表缓存
   const BGC = '#36e170'
-  const STORE_HISTORY = 'storeHistory'
 
   const formInitialValues: IFormInitialValues = {
-    minPrice: 100,
+    minPrice: 50,
     maxPrice: 99999,
-    minSalesQuantity: 5,
-    minGoodsQuantity: 3000,
+    minSalesQuantity: 1,
+    minGoodsQuantity: 2000,
     isOpenPriceTransform: true,
   }
 
@@ -57,7 +55,7 @@
         document.execCommand('copy') // 复制 - 仅当作为用户操作的响应结果时才可以工作(比如，点击事件)
         const successful = document.execCommand('copy') // 执行 copy 操作
         if (!successful) {
-          alert(`复制失败，请手动打开控制台复制`)
+          alert(`复制失败，请按F12打开控制台手动复制`)
         }
         // alert('复制成功！')
         document.body.removeChild(el) // 移除 <textarea> 元素
@@ -110,11 +108,7 @@
     }
   }
 
-  let potentialText = '复制商家潜力链接'
-
-  async function renderBar(links: string[], localFormData: IFormInitialValues) {
-    const storeHistory: string[] = (await chrome.storage.local.get([STORE_HISTORY]))[STORE_HISTORY] || []
-    const userName = document.querySelector<HTMLElement>('.user-id')?.innerText
+  async function renderBar(links: string[]) {
     document.querySelector('.kaki-bar')?.remove()
     const htmlStr = `
         <div class="kaki-bar-item">
@@ -124,12 +118,6 @@
         <div class="kaki-bar-item">
           <div class="kaki-button copy-current-page-links">复制当前页链接</div>
         </div>
-        <div class="kaki-bar-item">
-          <div class="kaki-button copy-potential-links">${potentialText}</div>
-        </div>
-        <div class="kaki-bar-item">
-          <div class="lutian-tips">${storeHistory.includes(userName!) ? '商家已被复制' : ''}</div>
-        </div>
     `
     const container = document.createElement('div')
     container.classList.add('kaki-bar')
@@ -137,102 +125,6 @@
     document.body.appendChild(container)
     ;(container.querySelector('.copy-current-page-links') as HTMLElement).onclick = () => {
       methods.copyToClipboard(links.join('\n') || '暂无数据')
-    }
-    const copyPotentialLinkButton = container.querySelector<HTMLElement>('.copy-potential-links')!
-    copyPotentialLinkButton.onclick = async () => {
-      if (potentialText === '正在拉取数据，请稍等') {
-        return
-      }
-      copyPotentialLinkButton.innerText = potentialText = '正在拉取数据，请稍等'
-
-      if (!userName) {
-        const errInfo = '没有找到userName'
-        copyPotentialLinkButton.innerText = potentialText = errInfo
-        setTimeout(() => {
-          renderBar(links, localFormData)
-        }, 200)
-        return
-      }
-      const storeInfo: IStoreResponse = await fetch(
-        `https://rapi.ruten.com.tw/api/users/v1/index.php/${userName}/storeinfo`
-      ).then((res) => res.json())
-      if (storeInfo.status !== 'success') {
-        const errInfo = '商家信息请求失败'
-        copyPotentialLinkButton.innerText = potentialText = errInfo
-        setTimeout(() => {
-          renderBar(links, localFormData)
-        }, 200)
-        return
-      }
-      const { goodsAllNum } = getGoodsAllNum()
-      const pageSize = 30
-      const potentialLinks: string[] = []
-      let chanceNum = 0 // 兜底操作。
-      let chanceMaxNum = 5
-      for (let limit = 1; limit < goodsAllNum / pageSize && chanceNum < chanceMaxNum; limit += pageSize) {
-        const scriptStr = await fetch(
-          `https://rtapi.ruten.com.tw/api/search/v3/index.php/core/seller/${
-            storeInfo.data.user_id
-          }/prod?sort=ords/dc&limit=${pageSize}&offset=${limit}&_=${Date.now()}&_callback=1`
-        ).then((response) => response.text())
-        const jsonStr = scriptStr.replace('try{1(', '').replace(');}catch(e){if(window.console){console.log(e);}}', '')
-        const goodsIdsInfo: IGoodsIdsCallbackInfo = JSON.parse(jsonStr)
-        const ids = goodsIdsInfo.Rows.map((item) => item.Id).toString()
-        const { data }: IGoodsResponse = await fetch(`https://rapi.ruten.com.tw/api/items/v2/list?gno=${ids}`).then(
-          (res) => res.json()
-        )
-        const dataLinks = data
-          .filter((item) => {
-            if (item.sold_num === 0) {
-              return false
-            }
-            const createTime = methods.dateFormat(new Date(parseInt(item.post_time) * 1000))
-            // 小于最小价格
-            if (item.goods_price_range.max < localFormData.minPrice) {
-              return false
-            }
-            // 一年半以前上架的商品就不要了
-            if (createTime < methods.dateFormat(methods.getBeforeDate(365 + 180))) {
-              return false
-            }
-            if (item.sold_num <= 3) {
-              // 1半个月内没有卖出3单
-              if (createTime < methods.dateFormat(methods.getBeforeDate(45))) {
-                return false
-              }
-            } else if (item.sold_num <= 5) {
-              // 2个月内没有卖出5单
-              if (createTime < methods.dateFormat(methods.getBeforeDate(60))) {
-                return false
-              }
-            } else if (item.sold_num <= 10) {
-              // 4个月内没有卖出10单
-              if (createTime < methods.dateFormat(methods.getBeforeDate(120))) {
-                return false
-              }
-            }
-            return true
-          })
-          .map((item) => `https://www.ruten.com.tw/item/show?${item.id}`)
-
-        potentialLinks.push(...dataLinks)
-        // 如果数据为0; 则最多往后面查找3页
-        if (dataLinks.length === 0) {
-          chanceNum++
-        } else {
-          chanceNum = 0
-        }
-      }
-      methods.copyToClipboard(potentialLinks.join('\n') || '暂无数据')
-
-      if (!storeHistory.includes(userName)) {
-        chrome.storage.local.set({
-          [STORE_HISTORY]: [...storeHistory, userName],
-        })
-      }
-      copyPotentialLinkButton.innerText = potentialText = potentialLinks.length
-        ? '复制商家潜力链接（复制成功！）'
-        : '暂无数据'
     }
   }
   // 初始化商品筛选
@@ -287,63 +179,10 @@
       return item.querySelector('.rt-product-card-img-wrap > a').href
     })
 
-    renderBar(links, localFormData)
+    renderBar(links)
   }
   clearInterval(window[TIMER_ID])
   window[TIMER_ID] = setInterval(initGoodsScreening, 500)
 
-  // 显示上架、修改时间逻辑
-  async function initShowTimeInfo() {
-    // // 获取商家信息
-    // const storeInfo: IStoreResponse = await fetch(
-    //   `https://rapi.ruten.com.tw/api/users/v1/index.php/${userName}/storeinfo`
-    // ).then((res) => res.json())
-    // if (storeInfo.status !== 'success') {
-    //   console.error('商家信息请求失败')
-    //   setTimeout(initShowTimeInfo, 1000)
-    //   return
-    // }
-    // console.log(storeInfo)
-
-    // 获取商家商品id列表 排序：rnk/dc ords/dc
-    // const query = new URLSearchParams(location.search);
-    // const scriptStr = await fetch(
-    //   `https://rtapi.ruten.com.tw/api/search/v3/index.php/core/seller/${
-    //     storeInfo.data.user_id
-    //   }/prod?sort=${query.get('sort')}&limit=30&offset=1&_=${Date.now()}&_callback=1`
-    // ).then((response) => response.text())
-    // const jsonStr = scriptStr.replace('try{1(', '').replace(');}catch(e){if(window.console){console.log(e);}}', '')
-    // const goodsIdsInfo: IGoodsIdsCallbackInfo = JSON.parse(jsonStr)
-    // const ids = goodsIdsInfo.Rows.map((item) => item.Id).toString()
-    // console.log('ids:', ids)
-    const goodsAEle = document.querySelectorAll<HTMLElement>(`.rt-product-card-img-wrap > a`)
-    if (!goodsAEle.length) {
-      return
-    }
-
-    const ids = Array.prototype.map.call(goodsAEle, (a: HTMLLinkElement) => {
-      return a.href.split('?')[1]
-    }) as string[]
-
-    if (ids.toString() === window[GOODS_IDS_CACHE]?.toString()) {
-      return
-    }
-    window[GOODS_IDS_CACHE] = ids
-
-    const res: IGoodsResponse = await fetch(`https://rapi.ruten.com.tw/api/items/v2/list?gno=${ids.toString()}`).then(
-      (res) => res.json()
-    )
-    document.querySelectorAll<HTMLElement>('.lutian-time-info').forEach((item) => item.remove())
-    res.data.forEach((item) => {
-      const div = document.createElement('div')
-      div.classList.add('lutian-time-info')
-      div.innerHTML = `
-        <p>上架时间：${new Date(parseInt(item.post_time) * 1000).toLocaleDateString()}</p>
-        <p>更新时间：${item.update_time}</p>
-      `
-      document.querySelector(`a[title="${item.name}"]`)?.parentElement?.parentElement?.appendChild(div)
-    })
-  }
-  setInterval(initShowTimeInfo, 200)
 })()
 export default {}

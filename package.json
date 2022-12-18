@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build --watch",
-    "build-white-list": "tsc && vite build --watch --mode whitelist",
+    "build": "tsc && vite build --watch --mode whitelist",
     "preview": "vite preview"
   },
   "dependencies": {

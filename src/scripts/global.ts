@@ -4,10 +4,10 @@
   const TRANSFORM_PRICE = 'transformPriceOver' // 上一次转换过后的价格
   const TIMER_ID = 'lutian_price_transform_timer' // 定时器id
   const formInitialValues: IFormInitialValues = {
-    minPrice: 100,
+    minPrice: 50,
     maxPrice: 99999,
-    minSalesQuantity: 5,
-    minGoodsQuantity: 3000,
+    minSalesQuantity: 1,
+    minGoodsQuantity: 2000,
     isOpenPriceTransform: true,
   }
   const methods = {
@@ -16,7 +16,7 @@
     },
     priceTransform(str: string) {
       const num = methods.getNumber(str.replace(/[^\d]/g, '')) * 0.23
-      return num > 0 ? num.toFixed(1) : str;
+      return num > 0 ? num.toFixed(1) : str
     },
   }
   chrome.storage.onChanged.addListener((changes, namespace) => {
@@ -41,6 +41,17 @@
   }
   async function init() {
     goodsImagesStyle()
+    const envWhiteListStr = import.meta.env.VITE_APP_WHITE_LIST
+    const whiteList: string[] | null = envWhiteListStr ? JSON.parse(envWhiteListStr) : null
+    const userName = document.querySelector<HTMLElement>('#header_user_nick')?.innerText
+    if (whiteList && !whiteList.includes(userName!)) {
+      return
+    }
+
+    await chrome.storage.local.set({
+      userName,
+    })
+
     const { isOpenPriceTransform }: IFormInitialValues = {
       ...formInitialValues,
       ...(await chrome.storage.local.get([LOCAL_KEY_FORMDATA]))[LOCAL_KEY_FORMDATA],
