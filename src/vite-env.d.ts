@@ -135,6 +135,7 @@ interface IGoodsIdsCallbackInfo {
 interface Window {
   lutian_price_transform_timer: number
   lutian_store_goods_links_copy_timer: number
+  lutian_mybid_timer: number
   lutian_store_goods_ids_cache: string[]
   lutian_find_goods_ids_cache: string[]
 }

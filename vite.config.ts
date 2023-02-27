@@ -17,7 +17,7 @@ export default defineConfig({
   ],
   build: {
     rollupOptions: {
-      input: ["index.html", "src/scripts/background.ts", "src/scripts/store.ts", "src/scripts/global.ts", "src/scripts/find.ts"],
+      input: ["index.html", "src/scripts/background.ts", "src/scripts/store.ts", "src/scripts/global.ts", "src/scripts/find.ts", "src/scripts/mybid.ts"],
       output: {
         chunkFileNames: "[name].[hash].js",
         assetFileNames: "[name].[hash].[ext]",

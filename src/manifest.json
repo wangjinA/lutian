@@ -21,6 +21,12 @@
       "css": ["styles/find.css"],
       "matches": ["https://www.ruten.com.tw/find/*"],
       "run_at": "document_start"
+    },
+    {
+      "js": ["scripts/mybid.js"],
+      "css": ["styles/mybid.css"],
+      "matches": ["https://mybid.ruten.com.tw/*"],
+      "run_at": "document_start"
     }
   ],
   "icons": {

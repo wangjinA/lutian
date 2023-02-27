@@ -26,7 +26,21 @@
       }
     }
   })
+  function goodsImagesStyle() {
+    const listWrapper = document.querySelector('.mybid-list')
+    if(listWrapper){
+      const imgs = listWrapper.querySelectorAll<HTMLImageElement>('.rt-product-image-wrap > img')
+      imgs.forEach(item => {
+        item.src = item.src.replace('_s.', '.');
+        item.style.cssText = `
+          max-width: initial;
+          width: 100px;
+        `
+      })
+    }
+  }
   async function init() {
+    goodsImagesStyle()
     const { isOpenPriceTransform }: IFormInitialValues = {
       ...formInitialValues,
       ...(await chrome.storage.local.get([LOCAL_KEY_FORMDATA]))[LOCAL_KEY_FORMDATA],

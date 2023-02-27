@@ -1,9 +1,8 @@
 ;(() => {
   const LOCAL_KEY_FORMDATA = 'configFormData' // 配置
-  const NATIVE_PRICE = 'nativePrice' // 本次转换前的价格
-  const TRANSFORM_PRICE = 'transformPriceOver' // 上一次转换过后的价格
   const TIMER_ID = 'lutian_price_transform_timer' // 定时器id
   const GOODS_IDS_CACHE = 'lutian_find_goods_ids_cache' // 商品id列表缓存
+  const STORE_HISTORY = 'storeHistory'
   const cahceObj: { [id: string]: IGoodsInfo } = {} // 商品信息缓存
 
   const BGC = '#36e170'
@@ -30,6 +29,7 @@
     }
   })
   async function init() {
+    const storeHistory: string[] = (await chrome.storage.local.get([STORE_HISTORY]))[STORE_HISTORY] || []
     const localFormData: IFormInitialValues = {
       ...formInitialValues,
       ...(await chrome.storage.local.get([LOCAL_KEY_FORMDATA]))[LOCAL_KEY_FORMDATA],
@@ -43,10 +43,8 @@
     }) as string[]
 
     if (ids.every((id) => window[GOODS_IDS_CACHE]?.includes(id))) {
-      console.log('页面dom不变')
       return
     }
-    console.error('页面dom改变')
     window[GOODS_IDS_CACHE] = ids
 
     // 读取一下缓存
@@ -79,14 +77,14 @@
         return oitem.href.split('?')[1] == item.id
       })
       let backgroundColor = BGC;
-      if (storeInfo.data.items_cnt < localFormData.minGoodsQuantity) {
+      let textColor = 'red';
+      const isExist = storeHistory.includes(item.user)
+      if (storeInfo.data.items_cnt < localFormData.minGoodsQuantity || isExist) {
         // 不符合要求的往后面排吧
         console.log('不符合要求')
-        console.log(targetAEle.parentElement?.parentElement?.parentElement)
-        console.log(targetAEle.parentElement?.parentElement)
-
         targetAEle.closest('.product-item')?.parentElement?.appendChild(targetAEle.closest('.product-item')!)
         backgroundColor = '#e1e1e1';
+        textColor = '#aeaeae'
       } 
       const parent = targetAEle?.parentElement?.parentElement
       if (parent && !parent.querySelector('.lutian-goods-Num')) {
@@ -94,12 +92,15 @@
         const div = document.createElement('div')
         div.classList.add('lutian-goods-Num')
         div.style.cssText = `
-          background-color: #aeaeae;
+          background-color: ${textColor};
           padding: 5px 10px;
           color: #000;
           font-weight: 700;
         `
-        div.innerHTML = `商品数量：${storeInfo.data.items_cnt}`
+        div.innerHTML = `
+          <p>商品数量：${storeInfo.data.items_cnt}</p>
+          <p>${isExist ? '采集过' : ''}</p>
+        `
         parent.appendChild(div)
       }
     }
