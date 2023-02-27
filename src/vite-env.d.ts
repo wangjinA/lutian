@@ -143,6 +143,7 @@ interface Window {
 interface ImportMetaEnv {
   readonly VITE_APP_WHITE_LIST: string
   readonly VITE_APP_END_TIME: string
+  readonly VITE_APP_DAY: string
   // 更多环境变量...
 }
 

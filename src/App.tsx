@@ -43,7 +43,7 @@ function App() {
     const envWhiteListStr = import.meta.env.VITE_APP_WHITE_LIST
     const whiteList: string[] | null = envWhiteListStr ? JSON.parse(envWhiteListStr) : null
     let text = '暂未开通权限'
-    const isPastDue = Date.now() - parseInt(import.meta.env.VITE_APP_END_TIME) > 365 * 24 * 3600 * 1000 // 是否过期
+    const isPastDue = Date.now() - parseInt(import.meta.env.VITE_APP_END_TIME) > parseInt(import.meta.env.VITE_APP_DAY) * 24 * 3600 * 1000 // 是否过期
 
     if (isPastDue) {
       text = '软件已过期'
