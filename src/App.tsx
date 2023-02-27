@@ -3,6 +3,30 @@ import FormItem from '@arco-design/web-react/es/Form/form-item'
 import { useEffect, useRef, useState } from 'react'
 import './App.less'
 const LOCAL_KEY_FORMDATA = 'configFormData' // 配置
+function myEncode(str: string) {
+  return str?.split(encodeURI('kaki')).join('')
+}
+function checkoutToken(userName?: string) {
+  const envWhiteListStr = import.meta.env.VITE_APP_WHITE_LIST
+  const whiteList: string[] | null = envWhiteListStr ? JSON.parse(envWhiteListStr).map(myEncode) : null
+  let text = '暂未开通权限'
+  const isPastDue =
+    Date.now() - parseInt(import.meta.env.VITE_APP_END_TIME) > parseInt(import.meta.env.VITE_APP_DAY) * 24 * 3600 * 1000 // 是否过期
+
+  if (isPastDue) {
+    text = '软件已过期'
+  }
+
+  if (!userName || (whiteList && !whiteList.includes(userName!)) || isPastDue) {
+    return (
+      <div style={{ color: 'red' }}>
+        <span style={{ pointerEvents: 'none' }}>{text}！请联系v：</span>
+        <span style={{ userSelect: 'all' }}>tk_0316q</span>
+      </div>
+    )
+  }
+  return null
+}
 
 const placeholder = '请输入'
 const formInitialValues: IFormInitialValues = {
@@ -40,22 +64,9 @@ function App() {
   }
 
   function AppContent() {
-    const envWhiteListStr = import.meta.env.VITE_APP_WHITE_LIST
-    const whiteList: string[] | null = envWhiteListStr ? JSON.parse(envWhiteListStr) : null
-    let text = '暂未开通权限'
-    const isPastDue = Date.now() - parseInt(import.meta.env.VITE_APP_END_TIME) > parseInt(import.meta.env.VITE_APP_DAY) * 24 * 3600 * 1000 // 是否过期
-
-    if (isPastDue) {
-      text = '软件已过期'
-    }
-
-    if ((whiteList && !whiteList.includes(userName!)) || isPastDue) {
-      return (
-        <div style={{ color: 'red' }}>
-          <span style={{ pointerEvents: 'none' }}>{text}！请联系v：</span>
-          <span style={{ userSelect: 'all' }}>tk_0316q</span>
-        </div>
-      )
+    const Token = checkoutToken(userName)
+    if (Token) {
+      return Token
     }
     return (
       <div>

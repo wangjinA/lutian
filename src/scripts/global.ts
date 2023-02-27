@@ -10,6 +10,7 @@
     minGoodsQuantity: 2000,
     isOpenPriceTransform: true,
   }
+
   const methods = {
     getNumber(str: string, defaultStr: string = '0') {
       return str ? parseInt(str.replace(/[^\d]/g, '') || defaultStr) : 0
@@ -17,6 +18,9 @@
     priceTransform(str: string) {
       const num = methods.getNumber(str.replace(/[^\d]/g, '')) * 0.23
       return num > 0 ? num.toFixed(1) : str
+    },
+    myEncode(str: string) {
+      return str?.split(encodeURI('kaki')).join('')
     },
   }
   chrome.storage.onChanged.addListener((changes, namespace) => {
@@ -28,10 +32,10 @@
   })
   function goodsImagesStyle() {
     const listWrapper = document.querySelector('.mybid-list')
-    if(listWrapper){
+    if (listWrapper) {
       const imgs = listWrapper.querySelectorAll<HTMLImageElement>('.rt-product-image-wrap > img')
-      imgs.forEach(item => {
-        item.src = item.src.replace('_s.', '.');
+      imgs.forEach((item) => {
+        item.src = item.src.replace('_s.', '.')
         item.style.cssText = `
           max-width: initial;
           width: 100px;
@@ -42,7 +46,7 @@
   async function init() {
     goodsImagesStyle()
     const envWhiteListStr = import.meta.env.VITE_APP_WHITE_LIST
-    const whiteList: string[] | null = envWhiteListStr ? JSON.parse(envWhiteListStr) : null
+    const whiteList: string[] | null = envWhiteListStr ? JSON.parse(envWhiteListStr).map(methods.myEncode) : null
     const userName = document.querySelector<HTMLElement>('#header_user_nick')?.innerText
     if (whiteList && !whiteList.includes(userName!)) {
       return
