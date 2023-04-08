@@ -330,7 +330,6 @@
 
   // 显示上架、修改时间逻辑
   async function initShowTimeInfo() {
-    return;
     if (checkoutToken(document.querySelector<HTMLElement>('#header_user_nick')?.innerText)) {
       return
     }
