@@ -22,6 +22,17 @@ function checkoutToken(userName?: string) {
       <div style={{ color: 'red' }}>
         <span style={{ pointerEvents: 'none' }}>{text}！请联系v：</span>
         <span style={{ userSelect: 'all' }}>tk_0316q</span>
+        <a
+          target="_blank"
+          href="https://docs.qq.com/doc/DQkZYVEFMU2RSaUxK?u=380951d17e1247eb92243dc959adc029"
+          style={{
+            marginLeft: 40,
+            color: '#4949ff',
+            fontWeight: 700,
+          }}
+        >
+          相关教程
+        </a>
       </div>
     )
   }
@@ -94,6 +105,17 @@ function App() {
           <div style={{ color: '#9a9a9a', fontSize: 14, padding: '5px 0', textAlign: 'center' }}>
             <span style={{ pointerEvents: 'none' }}>v：</span>
             <span style={{ userSelect: 'all' }}>tk_0316q</span>
+            <a
+              target="_blank"
+              href="https://docs.qq.com/doc/DQkZYVEFMU2RSaUxK?u=380951d17e1247eb92243dc959adc029"
+              style={{
+                marginLeft: 40,
+                color: '#4949ff',
+                fontWeight: 700,
+              }}
+            >
+              相关教程
+            </a>
           </div>
         </Form>
       </div>
