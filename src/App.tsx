@@ -20,11 +20,11 @@ function checkoutToken(userName?: string) {
   if (!userName || (whiteList && !whiteList.includes(userName!)) || isPastDue) {
     return (
       <div style={{ color: 'red' }}>
-        <span style={{ pointerEvents: 'none' }}>{text}！请联系v：</span>
-        <span style={{ userSelect: 'all' }}>tk_0316q</span>
+        <span style={{ pointerEvents: 'none' }}>{text}！如有疑问加微信联系：</span>
+        <span style={{ userSelect: 'all' }}>Fate2999</span>
         <a
           target="_blank"
-          href="https://docs.qq.com/doc/DQkZYVEFMU2RSaUxK?u=380951d17e1247eb92243dc959adc029"
+          href="https://docs.qq.com/doc/DQlB3QW9mdGJWRGNk?u=380951d17e1247eb92243dc959adc029"
           style={{
             marginLeft: 40,
             color: '#4949ff',
@@ -103,11 +103,11 @@ function App() {
             <Switch type="line" />
           </FormItem>
           <div style={{ color: '#9a9a9a', fontSize: 14, padding: '5px 0', textAlign: 'center' }}>
-            <span style={{ pointerEvents: 'none' }}>v：</span>
-            <span style={{ userSelect: 'all' }}>tk_0316q</span>
+            <span style={{ pointerEvents: 'none' }}>如有疑问加微信联系：</span>
+            <span style={{ userSelect: 'all' }}>Fate2999</span>
             <a
               target="_blank"
-              href="https://docs.qq.com/doc/DQkZYVEFMU2RSaUxK?u=380951d17e1247eb92243dc959adc029"
+              href="https://docs.qq.com/doc/DQlB3QW9mdGJWRGNk?u=380951d17e1247eb92243dc959adc029"
               style={{
                 marginLeft: 40,
                 color: '#4949ff',
